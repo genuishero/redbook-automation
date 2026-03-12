@@ -23,33 +23,16 @@
 - 生成高贴合主题的新笔记（封面/配图、标题、正文、话题）
 - 支持三种模式：`style-only`（仅风格）、`medium`（中等贴合）、`tight`（高一致性）
 
-```
-# 爆款复刻流程
-1. 输入爆款笔记 URL
-2. 分析：标题/封面/正文/互动机制
-3. 参考封面风格生成新封面
-4. 输出：3个标题 + 正文 + 封面文案 + 配图prompt + 话题
-5. 发布（需确认）
-```
-
 ### 🎨 图片渲染
 
-**多主题支持**：8种专业主题
+**智谱 AI 图片生成**
+- 使用 CogView-3-Flash 免费生成封面图
+- 小红书封面专用风格优化
+- 支持 768×1024px 比例
 
-| 主题 | 说明 | 适用场景 |
-|------|------|---------|
-| `default` | 简约灰色 | 通用 |
-| `professional` | 专业商务 | 商业、科技 |
-| `playful-geometric` | 活力几何 | 生活方式 |
-| `neo-brutalism` | 新粗野主义 | 设计、艺术 |
-| `botanical` | 自然植物 | 美食、旅行 |
-| `retro` | 复古风格 | 怀旧、文化 |
-| `terminal` | 终端风格 | 技术、编程 |
-| `sketch` | 手绘风格 | 创意、教育 |
-
-**智能分页**：自动切分长内容为多张卡片
-
-**高清输出**：1080×1440px（3:4 比例）
+**多主题 PIL 渲染**（备用方案）
+- 8种专业主题
+- 智能分页、高清输出
 
 ### 🚀 自动发布
 
@@ -58,54 +41,21 @@
 - 支持本地图片路径（无需图床）
 - 私密/公开发布切换
 - 定时发布
+- **发布失败自动重试**（最多3次）
 
 **浏览器自动化发布（备用）**
 - 可视化确认
 - 适用于 MCP 不可用时
 
-### 💬 评论管理
-
-**评论检查**
-- 打开通知页「评论和@」
-- 抓取最新评论：用户名、内容、时间
-- 高风险信号识别（辱骂、钓鱼、诱导外链）
-
-**评论回复**
-- 通知页优先回复
-- 对位校验（placeholder 确认）
-- 风控节奏：默认每轮 1 条，间隔 8-15 秒
-- 异常检测：频繁操作、发送失败自动停止
-
-```
-# 评论回复流程
-1. 检查通知页新评论
-2. 输出摘要 + 风险提示
-3. 用户确认后回复
-4. 校验 placeholder 为 "回复 <用户名>"
-5. 逐字输入文案
-6. 点击发送，确认成功
-```
-
 ### 📊 数据分析
 
-**笔记搜索**
-- 按关键词搜索热门笔记
-- 获取笔记详情（内容、评论、互动数据）
-
-**推荐流获取**
-- 获取平台推荐内容
-- 分析热门趋势
-
-**详情分析**
-- 笔记内容提取
-- 评论数据分析
-- 互动指标统计
+**笔记搜索、详情分析、推荐流获取、评论管理**
 
 ---
 
 ## 🚀 快速开始
 
-### 安装 MCP 工具
+### 1. 安装 MCP 工具
 
 ```bash
 # 下载（Intel Mac）
@@ -121,12 +71,28 @@ chmod +x xiaohongshu-mcp-darwin-amd64 xiaohongshu-login-darwin-amd64
 ~/.local/bin/xiaohongshu-mcp-darwin-amd64 &
 ```
 
-### 安装依赖
+### 2. 克隆项目
 
 ```bash
 git clone https://github.com/genuishero/redbook-automation.git
 cd redbook-automation
 pip install -r requirements.txt
+```
+
+### 3. 配置 API Key
+
+```bash
+# 复制环境变量模板
+cp scripts/.env.example scripts/.env
+
+# 编辑 .env 文件，填入你的智谱 API Key
+# 获取地址: https://open.bigmodel.cn/
+vim scripts/.env
+```
+
+`.env` 文件内容：
+```
+ZHIPU_API_KEY=your-zhipu-api-key-here
 ```
 
 ---
@@ -159,39 +125,39 @@ python scripts/mcp_publish.py \
   --content "正文" \
   --images img1.png \
   --time "2026-03-10 08:00"
-
-# 演示模式
-python scripts/mcp_publish.py --demo
 ```
 
-### 图片渲染
+### 每日自动发布
 
 ```bash
-# 基础渲染
-python scripts/render_xhs.py input.md
+# 手动执行（随机话题 + AI 生成封面 + 自动发布）
+python scripts/daily_publish.py
 
-# 指定主题
-python scripts/render_xhs.py input.md -t professional
-
-# 指定输出目录
-python scripts/render_xhs.py input.md -o ./output/
+# 定时任务（crontab）
+# 每天 8:30 发布
+30 8 * * * cd /path/to/redbook-automation && python scripts/daily_publish.py >> ~/.openclaw/logs/xhs_daily_publish.log 2>&1
 ```
 
-### 数据分析
+---
 
-```bash
-# 检查登录状态
-python scripts/xhs_client.py status
+## 🔄 最新更新
 
-# 搜索笔记
-python scripts/xhs_client.py search "咖啡推荐"
+### v2026.03.12
 
-# 获取笔记详情
-python scripts/xhs_client.py detail "feed_id" "xsec_token"
+**错误日志改进**
+- 发布失败时记录详细错误信息
+- 图片验证：检查图片是否存在
+- 异常捕获：记录完整堆栈信息
 
-# 获取推荐流
-python scripts/xhs_client.py feeds
-```
+**发布重试机制**
+- 发布失败自动重试（最多3次）
+- 每次重试间隔2秒
+- 参数错误不重试（快速失败）
+
+**安全性改进**
+- 移除硬编码 API Key
+- 改用环境变量 + `.env` 文件
+- `.env` 已加入 `.gitignore`
 
 ---
 
@@ -201,8 +167,15 @@ python scripts/xhs_client.py feeds
 # 编辑 crontab
 crontab -e
 
-# 每天 8:00 发布
-0 8 * * * cd /path/to/redbook-automation && python scripts/mcp_publish.py --demo >> ~/.logs/xhs_publish.log 2>&1
+# 添加定时任务
+# MCP 启动检查（8:25）
+25 8 * * * /Users/genuis/.openclaw/functions/start-xhs-mcp.sh
+
+# 每日发布（8:30）
+30 8 * * * cd /path/to/redbook-automation && python scripts/daily_publish.py >> ~/.openclaw/logs/xhs_daily_publish.log 2>&1
+
+# MCP 启动检查（12:55）
+55 12 * * * /Users/genuis/.openclaw/functions/start-xhs-mcp.sh
 ```
 
 ---
@@ -212,17 +185,15 @@ crontab -e
 ### MCP 登录
 - 登录状态持续有效，无需重复登录
 - **不要在其他浏览器登录同一账号**，否则会踢掉 MCP 登录
-- 登录失效时重新扫码即可
 
 ### 图片要求
 - 支持 PNG/JPG 格式
 - 推荐尺寸：1080×1440px（3:4 比例）
 - 最大 18 张图片
 
-### 评论回复风控
-- 默认每轮只发 1 条
-- 间隔 8-15 秒
-- 遇到"操作频繁"立即停止
+### 安全提示
+- **不要提交 `.env` 文件到 Git**
+- API Key 请妥善保管
 
 ---
 
@@ -236,17 +207,22 @@ crontab -e
 sleep 3 && python scripts/mcp_publish.py --check
 ```
 
-### MCP 未登录
+### 发布失败
 
+查看详细日志：
 ```bash
-~/.local/bin/xiaohongshu-login-darwin-amd64
-# 扫描二维码登录
+# 查看发布日志
+cat ~/.openclaw/logs/xhs_daily_publish.log | tail -50
+
+# MCP 实时日志（需要重启 MCP）
+pkill -f xiaohongshu-mcp
+~/.local/bin/xiaohongshu-mcp-darwin-amd64 2>&1 | tee /tmp/mcp.log
 ```
 
-### 图片上传失败
-- 检查图片路径（使用绝对路径）
-- 检查图片格式（PNG/JPG）
-- 检查图片数量（≤18张）
+常见错误：
+- `400 Bad Request` - 图片数组为空或参数错误
+- `MCP 未登录` - 运行登录工具扫码
+- `图片不存在` - 检查图片路径
 
 ---
 
@@ -255,22 +231,21 @@ sleep 3 && python scripts/mcp_publish.py --check
 ```
 redbook-automation/
 ├── README.md
-├── LICENSE
-├── requirements.txt
+├── .gitignore
 ├── scripts/
-│   ├── mcp_publish.py      # MCP 发布
-│   ├── xhs_client.py       # 数据分析
-│   ├── render_xhs.py       # 图片渲染
-│   ├── render_xhs_v2.py    # 图片渲染 v2
-│   ├── publish_xhs.py      # 浏览器发布
-│   └── xhs_auto_publish.py # 自动发布流程
+│   ├── .env.example         # 环境变量模板
+│   ├── .env                 # 本地配置（不提交）
+│   ├── mcp_publish.py       # MCP 发布（带重试）
+│   ├── daily_publish.py     # 每日自动发布
+│   ├── zhipu_image.py       # 智谱图片生成
+│   ├── render_xhs.py        # PIL 图片渲染
+│   └── xhs_client.py        # 数据分析
 ├── references/
-│   ├── xhs-comment-ops.md     # 评论操作指南
-│   ├── xhs-viral-copy-flow.md # 爆款复刻流程
-│   ├── xhs-publish-flows.md   # 发布流程
-│   └── xhs-runtime-rules.md   # 运行规则
+│   ├── xhs-comment-ops.md
+│   ├── xhs-viral-copy-flow.md
+│   └── ...
 └── templates/
-    └── persona.md          # 人设模板
+    └── persona.md
 ```
 
 ---
@@ -279,6 +254,7 @@ redbook-automation/
 
 - [xiaohongshu-mcp](https://github.com/xpzouying/xiaohongshu-mcp) - MCP 服务器
 - [xhs](https://github.com/ReaJason/xhs) - Python 小红书库
+- 智谱 AI - CogView-3-Flash 图片生成
 
 ---
 
